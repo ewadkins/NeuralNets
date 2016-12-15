@@ -51,7 +51,7 @@ decay_rate = 0.30 # Exponential decay used to calculate sustained loss
 use_GPU = False # Use CUDA acceleration
 
 # Display settings
-show_progress = False
+show_progress = True
 display_step = 100
 delay = 0.001
 interpolation = None # None to use default (eg. "nearest", "bilinear")
