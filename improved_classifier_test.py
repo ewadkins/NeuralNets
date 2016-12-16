@@ -32,14 +32,17 @@ def model(learning_rate=0.01):
     loss = tf.reduce_mean(tf.maximum(-1.0, tf.square(dot) * tf.sign(dot)) + 1.0)
     train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
     
-    return train_op, x, y, out, loss, weights, biases
+    # Accuracy
+    accuracy = 1.0 - tf.reduce_mean(tf.sign(tf.maximum(0.0, dot)))
+    
+    return train_op, x, y, out, loss, accuracy, weights, biases
 
 ###############################################################################
 ### Settings
 
 # Training settings
 # Note: Training terminates when the sustained loss is below loss_threshold, or when training has reached max_epochs
-max_epochs = 50000
+max_epochs = 100000
 learning_rate = 0.05
 loss_threshold = 1e-12
 decay_rate = 0.30 # Exponential decay used to calculate sustained loss
@@ -47,10 +50,10 @@ use_GPU = False # Use CUDA acceleration
 
 # Display settings
 show_progress = True
-display_step = 100
+display_step = 500
 delay = 0.001
 interpolation = None # None to use default (eg. "nearest", "bilinear")
-resolution = 10
+resolution = 20
 margin = 0.5
 boundary_blur_size = 0.5
 
@@ -275,7 +278,7 @@ def display(session, loss_val, points, labels, out_val, done):
 ###############################################################################
 
 # Build model and get variable handles
-train_op, x, y, out, loss, weights, biases = model(learning_rate)
+train_op, x, y, out, loss, accuracy, weights, biases = model(learning_rate)
 
 # Initialize environment
 initialize = tf.global_variables_initializer()
@@ -300,12 +303,12 @@ with tf.Session(config=config) as session:
     while not done:
 
         # Trains on the data
-        _, loss_val, out_val = session.run([train_op, loss, out], feed_dict={x: points, y: labels})
+        _, loss_val, accuracy_val, out_val = session.run([train_op, loss, accuracy, out], feed_dict={x: points, y: labels})
         sustained_loss = decay_rate * sustained_loss + (1.0 - decay_rate) * loss_val
         loss_values.append(loss_val)
             
         epoch += 1
-        print "Epoch {}".format(epoch)
+        print "Epoch {}, accuracy {}".format(epoch, accuracy_val)
         
         # Termination condition
         if epoch >= max_epochs or sustained_loss < loss_threshold:
