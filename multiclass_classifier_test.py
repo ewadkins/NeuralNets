@@ -2,6 +2,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import matplotlib.colors as colors
 
 ###############################################################################
 
@@ -9,11 +10,11 @@ def model(learning_rate=0.01):
     # Parameters
     weights = {
         'fc1': tf.Variable(tf.random_normal([2, 8], stddev=np.sqrt(2./(2)))),
-        'out': tf.Variable(tf.random_normal([8, 1], stddev=np.sqrt(2./(8)))),
+        'out': tf.Variable(tf.random_normal([8, 3], stddev=np.sqrt(2./(8)))),
     }
     biases = {
         'fc1': tf.Variable(tf.zeros(8)),
-        'out': tf.Variable(tf.zeros(1)),
+        'out': tf.Variable(tf.zeros(3)),
     }
 
     # Placeholders for training data
@@ -28,12 +29,11 @@ def model(learning_rate=0.01):
     out = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
 
     # Loss and optimizer
-    dot = tf.transpose(-out) * tf.to_float(y)
-    loss = tf.reduce_mean(tf.maximum(-1.0, tf.square(dot) * tf.sign(dot)) + 1.0)
+    loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(out, y))
     train_op = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
     
     # Accuracy
-    accuracy = 1.0 - tf.reduce_mean(tf.sign(tf.maximum(0.0, dot)))
+    accuracy = tf.reduce_mean(tf.cast(tf.nn.in_top_k(out, y, 1), tf.float32))
     
     return train_op, x, y, out, loss, accuracy, weights, biases
 
@@ -65,33 +65,23 @@ def kernel(points):
         #points[i].append(points[i][1] ** 2)
     return points
 
-#point_label_map = {}
-#n = 20
-#x1 = np.random.normal(2, 2, n)
-#y1 = np.random.normal(7, 1, n)
-#x2 = np.random.normal(8, 2, n)
-#y2 = np.random.normal(4, 1, n)
-#for i in range(n):
-#    point_label_map[(x1[i], y1[i])] = 1
-#    point_label_map[(x2[i], y2[i])] = -1
-
 #point_label_map = {
-#    (3, 3): -1,
-#    (3, 4): -1,
-#    (3, 5): -1,
-#    (3, 6): -1,
-#    (3, 7): -1,
-#    (4, 7): -1,
-#    (5, 7): -1,
-#    (6, 7): -1,
-#    (7, 7): -1,
-#    (7, 6): -1,
-#    (7, 5): -1,
-#    (7, 4): -1,
-#    (7, 3): -1,
-#    (6, 3): -1,
-#    (5, 3): -1,
-#    (4, 3): -1,
+#    (3, 3): 0,
+#    (3, 4): 0,
+#    (3, 5): 0,
+#    (3, 6): 0,
+#    (3, 7): 0,
+#    (4, 7): 0,
+#    (5, 7): 0,
+#    (6, 7): 0,
+#    (7, 7): 0,
+#    (7, 6): 0,
+#    (7, 5): 0,
+#    (7, 4): 0,
+#    (7, 3): 0,
+#    (6, 3): 0,
+#    (5, 3): 0,
+#    (4, 3): 0,
 #    
 #    (1, 3): 1,
 #    (1, 4): 1,
@@ -125,19 +115,20 @@ def kernel(points):
 #    (2, 1): 1,
 #    (1, 1): 1,
 #    (1, 2): 1,
-#    (5, 5): 1,
+#    
+#    (5, 5): 2,
 #}
 
 point_label_map = {
-    (3, 1): -1,
-    (3, 2): -1,
-    (3, 3): -1,
-    (3, 4): -1,
-    (3, 5): -1,
-    (4, 5): -1,
-    (5, 5): -1,
-    (6, 5): -1,
-    (7, 5): -1,
+    (3, 1): 0,
+    (3, 2): 0,
+    (3, 3): 0,
+    (3, 4): 0,
+    (3, 5): 0,
+    (4, 5): 0,
+    (5, 5): 0,
+    (6, 5): 0,
+    (7, 5): 0,
     
     (1, 1): 1,
     (1, 2): 1,
@@ -152,54 +143,9 @@ point_label_map = {
     (5, 7): 1,
     (6, 7): 1,
     (7, 7): 1,
+        
+    (7, 1): 2,
 }
-
-#point_label_map = {
-#    (2, 1): -1,
-#    (3, 2): -1,
-#    (4, 1): -1,
-#    (4, 2): -1,
-#    (4, 3): -1,
-#    (5, 4): -1,
-#    (6, 2): -1,
-#    (7, 4): -1,
-#    
-#    (1, 2): 1,
-#    (1, 4): 1,
-#    (2, 3): 1,
-#    (2, 5): 1,
-#    (3, 4): 1,
-#    (4, 6): 1,
-#    (5, 5): 1,
-#}
-
-#point_label_map = {
-#    (1, 6): -1,
-#    (1, 5): -1,
-#    (1, 4): -1,
-#    (1, 3): -1,
-#    (2, 2): -1,
-#    (3, 1): -1,
-#    (4, 1): -1,
-#    (5, 1): -1,
-#    (6, 1): -1,
-#    (7, 2): -1,
-#    (8, 3): -1,
-#    (8, 4): -1,
-#    (8, 5): -1,
-#    (8, 6): -1,
-#    (7, 7): -1,
-#    (6, 8): -1,
-#    (5, 8): -1,
-#    (4, 8): -1,
-#    (3, 8): -1,
-#    (2, 7): -1,
-#    
-#    (4, 4): 1,
-#    (4, 5): 1,
-#    (5, 4): 1,
-#    (5, 5): 1,
-#}
 
 ###############################################################################
 ### Display setup
@@ -235,6 +181,13 @@ test_points = [[untransform_x(i), untransform_y(j)] for j in range(hm_height) fo
 
 test_points = kernel(test_points)
 
+map_colors = ['#990000', '#004C99', '#009900']
+marker_colors = list(map_colors)
+cmap = colors.ListedColormap(map_colors)
+bounds=[-0.5, 0.5, 1.5, 2.5]
+norm = colors.BoundaryNorm(bounds, cmap.N)
+ticks = [0, 1, 2]
+
 heatmap = np.zeros((hm_height, hm_width))
 def formatter_x(x, p):
     return "{}".format(int(x / resolution + x_left)) if x / resolution % 1 == 0 else ""
@@ -256,18 +209,19 @@ def display(session, loss_val, points, labels, out_val, done):
     # Draw heatmap
     global heatmap
     test_result = session.run([out], feed_dict={x: test_points})
-    test_result[0] /= boundary_blur_size * (np.max(test_result[0]) - np.min(test_result[0]))
+    #test_result[0] /= boundary_blur_size * (np.max(test_result[0]) - np.min(test_result[0]))
     
     for i in range(hm_height):
         for j in range(hm_width):
             n = i * hm_width + j
-            heatmap[i][j] = 1 / (1 + np.exp(test_result[0][n] * 100)) * 2 - 1
-    hm = plt.imshow(heatmap, interpolation=interpolation, origin='lower')
+            heatmap[i][j] = np.argmax(test_result[0][n])
+    hm = plt.imshow(heatmap, interpolation=interpolation, origin='lower', cmap=cmap, norm=norm)
+    plt.colorbar(hm, ticks=ticks)
 
     # Draw points
     for i in range(len(points)):
-        correct = np.sign(out_val[i][0]) == labels[i] or np.sign(out_val[i][0]) == 0 and labels[i] == 1
-        color = ('#4560ff' if labels[i] == 1 else '#ff534a')
+        correct = np.argmax(out_val[i]) == labels[i]
+        color = marker_colors[labels[i]]
         plt.scatter(transform_x(points[i][0]), transform_y(points[i][1]), color=color, s=60, edgecolors=('black' if correct else 'white'), linewidth=2)
         
     # Update text
@@ -311,6 +265,8 @@ with tf.Session(config=config) as session:
         print "Epoch {}".format(epoch)
         print "  Loss: {}".format(loss_val)
         print "  Accuracy: {}".format(accuracy_val)
+        
+        #print out_val
         
         # Termination condition
         if epoch >= max_epochs or sustained_loss < loss_threshold:
